@@ -1,0 +1,37 @@
+Database Design 
+
+Step 1: Create a Participants table that should consist following information like:
+(i) Participant Number
+(ii) Driver Name
+(iii) Co-driver Name
+(iv) Category
+
+Step 2: Create Individual Tables for different categories of participants and it should include: 
+(i) Participant Number
+(ii) Driver Name
+(iii) Category
+(iv) number of  Tracks (Note: The Tracks should be added as automatically as the user adds the tracks on the application)
+(v) Individual Track  Completion Time
+(vi) Individual Track Position
+(vii) Individual Track Score without Penalty
+(viii) Individual Track Penalty
+(ix) Individual Track Score after calculating (Score-Penalty)
+(x) Once all the Track details are added individually the Total Score is calculated
+(xi) Position is decided after the calculation of Total Score
+
+Step 3: Create Individual Tables for different categories of participants and this table will be displaying the final result in each category and it should include: 
+(i) Participant Number
+(ii) Driver Name
+(iii) Co-driver Name
+(iv) Individual Track Scores
+(v) Total Score
+(vi) Overall Position after calculating the score of all the tracks in that particular category
+
+Step 4: Create a Table that will include the details of all categories of Participants and this table will display the overall result among all categories this will include:
+(i) Participant Number
+(ii) Driver Name
+(iii) Co-driver Name
+(iv) Individual Track Scores
+(v) Total Score
+(vi) Overall Positions will be displayed after comparing with all the participants of all categories.
+

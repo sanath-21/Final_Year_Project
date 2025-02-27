@@ -1,0 +1,34 @@
+Create an Offroad Challenge Tracker: Ranking and Score Management System for RFC
+
+The Offroad Challenge Tracker is an application that manages the ranking and scoring in Rain Forest Challenges
+
+When you open the app there should be options to add:
+(i) Participant Number
+(ii) Driver Name
+(iii) Co-driver Name
+(iv) Category dropdown to select categories (All
+Stock
+Mod Petrol
+Mod Diesel
+Pro
+Ladies + Pro)
+
+Once all this is done the user will either click on Add Participant to add the next one or clear details or remove participant (incase of wrong entry) or click on submit details and once clicked the details should be stored on the database and move to the next screen where you will get a plus sign button to add tracks individually and a submit button that will store these details in the database and move to the next screen, once you click on add button you should be able to add details of individual participants as per each track
+
+After that the user should enter the details of each participant for that particular track and the details include:
+(i) Track Completion Time
+(ii) Track Score without Penalty
+(iii) Track Penalty
+
+suppose the first time you click on this button you should be able to add details of Track 1 once you add it there should be 2 buttons one to submit the details and store in the database and the other to edit it. once clicked on submit you should comeback to the track addition screen.
+
+
+now after these details are entered the user should click on submit and once he clicks on submit the position of the participants for that particular track should be displayed automatically
+
+Once you finish adding details of one track you should get 2 options:
+(i) Add another track and continue the same process as above
+(ii) Finish
+
+If the user clicks on Finish then you cannot add more tracks and the app will display the results by automatically calculating the Total Score of all the tracks and based on this total score it will generate ranking and when you filter out the categories it will change the rankings accordingly 
+
+ 
