@@ -101,12 +101,6 @@ Future<List<Map<String, dynamic>>> getRankings() async {
   ''');
 }
 
-// Get All Participants
-Future<List<Map<String, dynamic>>> getAllParticipants() async {
-  final db = await instance.database;
-  return await db.query('Participants');
-}
-
 
   // Get All Participants
   Future<List<Map<String, dynamic>>> getAllParticipants() async{
