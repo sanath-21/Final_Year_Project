@@ -67,6 +67,46 @@ class DatabaseHelper {
     return await db.insert('Participants', participant);
   } 
 
+// Insert Score Data
+Future<int> insertScore(int participantId, int trackId, double completionTime, int trackScore, int penalty) async {
+  final db = await instance.database;
+  return await db.insert('Scores', {
+    'participant_id': participantId,
+    'track_id': trackId,
+    'completion_time': completionTime,
+    'track_score': trackScore,
+    'penalty': penalty,
+  });
+}
+
+// Get Total Scores
+Future<List<Map<String, dynamic>>> getTotalScores() async {
+  final db = await instance.database;
+  return await db.rawQuery('''
+    SELECT participant_id, SUM(track_score - penalty - completion_time) AS total_score
+    FROM Scores 
+    GROUP BY participant_id
+    ORDER BY total_score DESC;
+  ''');
+}
+
+// Get Rankings
+Future<List<Map<String, dynamic>>> getRankings() async {
+  final db = await instance.database;
+  return await db.rawQuery('''
+    SELECT participant_id, 
+           RANK() OVER (ORDER BY SUM(track_score - penalty - completion_time) DESC) AS rank
+    FROM Scores 
+    GROUP BY participant_id;
+  ''');
+}
+
+// Get All Participants
+Future<List<Map<String, dynamic>>> getAllParticipants() async {
+  final db = await instance.database;
+  return await db.query('Participants');
+}
+
 
   // Get All Participants
   Future<List<Map<String, dynamic>>> getAllParticipants() async{
