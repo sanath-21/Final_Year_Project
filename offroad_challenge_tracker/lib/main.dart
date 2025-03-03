@@ -72,36 +72,38 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   void showAddParticipantDialog(){
     showDialog(
       context: context, 
-      builder: (context) => AlertDialog(
-        title: Text('Add Participant'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _participantNumberController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Participant Number'),
-            ),
-            TextField(
-              controller: _driverNameController,
-              decoration: InputDecoration(labelText: 'Driver Name'),
-            ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateDialog){
+          return AlertDialog(
+            title: Text('Add Participant'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _participantNumberController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Participant Number'),
+              ),
+              TextField(
+                controller: _driverNameController,
+                decoration: InputDecoration(labelText: 'Driver Name'),
+              ),
 
-            TextField(
-              controller: _coDriverNameController,
-              decoration: InputDecoration(labelText: 'Co-Driver Name'),
-            ),
+              TextField(
+                controller: _coDriverNameController,
+                decoration: InputDecoration(labelText: 'Co-Driver Name'),
+              ),
             
-            DropdownButton<String>(
-              value: _selectedCategory, 
-              onChanged: (newValue){
-                setState(() {  //This setState does not rebuild the dialog
-                  _selectedCategory = newValue!;                
-                });
-              },
-              items: ['Stock', 'Mod Petrol', 'Mod Diesel', 'Pro', 'Ladies + Pro']
-              .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-              .toList(),
+              DropdownButton<String>(
+                value: _selectedCategory, 
+                onChanged: (newValue){
+                  setStateDialog(() {  //This setState does not rebuild the dialog
+                    _selectedCategory = newValue!;                
+                  });
+                },
+                items: ['Stock', 'Mod Petrol', 'Mod Diesel', 'Pro', 'Ladies + Pro']
+                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                  .toList(),
               ),
           ],
         ),
@@ -115,6 +117,8 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
               child: Text('Add'),
               ),
         ],
+        );
+        },
       ),
       );
   }
@@ -128,7 +132,16 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Participants'),),
+      appBar: AppBar(
+        title: Text('Participants'),
+        actions: [
+          IconButton(icon: Icon(Icons.leaderboard),
+          onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context) => RankingsScreen()));
+          },
+          ),
+        ],
+        ),
       body: Column(
         children: [
           ElevatedButton(
@@ -153,6 +166,48 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
               ),
         ],
       ),
+    );
+  }
+}
+
+
+//Rankings Screen
+class RankingsScreen extends StatefulWidget{
+  @override
+  _RankingsScreenState createState() => _RankingsScreenState();
+}
+
+class _RankingsScreenState extends State<RankingsScreen>{
+  List<Map<String, dynamic>> rankings = [];
+
+  void fetchRankings() async {
+    List<Map<String, dynamic>> data = await DatabaseHelper.instance.getRankings();
+    setState(() {
+      rankings = data;
+    });
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    fetchRankings();
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(title: Text('Rankings')),
+      body: rankings.isEmpty
+        ? Center(child: Text('No rankings available'))
+        :ListView.builder(
+          itemCount: rankings.length,
+          itemBuilder: (context, index){
+            return ListTile(
+              title: Text("Participant ID: ${rankings[index]['participant_id']}"),
+              subtitle: Text("Rank: ${rankings[index]['rank']}"),
+            );
+          },
+          ),
     );
   }
 }

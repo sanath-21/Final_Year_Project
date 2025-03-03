@@ -43,7 +43,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE Scores(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      paricipant_id INTEGER NOT NULL,
+      participant_id INTEGER NOT NULL,
       track_id INTEGER NOT NULL,
       completion_time REAL NOT NULL,
       track_score INTEGER NOT NULL,
