@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/participant_screen.dart';
-
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -13,7 +12,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ParticipantScreen(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            textStyle: TextStyle(fontSize: 18),
+          ),
+        ),
+      ),
+      home: HomeScreen(),
     );
   }
 }

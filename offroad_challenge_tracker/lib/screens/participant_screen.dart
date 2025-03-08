@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
-import 'rankings_screen.dart';
+
 
 class ParticipantScreen extends StatefulWidget{
   @override
@@ -117,40 +117,29 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Participants'),
-        actions: [
-          IconButton(icon: Icon(Icons.leaderboard),
-          onPressed: (){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => RankingsScreen()));
-          },
-          ),
-        ],
+      appBar: AppBar(title: Text('Participants')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: showAddParticipantDialog,
+        child: Icon(Icons.add),),
+      body: participants.isEmpty
+      ? Center(child: Text("No Participants Added"))
+      :ListView.builder(
+        itemCount: participants.length,
+        itemBuilder: (context, index){
+          return Card(
+            margin: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+            child: ListTile(
+              title: Text(participants[index]['driver_name']),
+              subtitle: Text(
+                'Co-driver: ${participants[index]['co_driver_name']} | Category: ${participants[index]['category']}'),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => deleteParticipant(participants[index]['id']),
+                  ),
+            ),      
+          );
+        },
         ),
-      body: Column(
-        children: [
-          ElevatedButton(
-            onPressed: showAddParticipantDialog, 
-            child: Text('Add Participant'),
-            ),
-          
-          Expanded(
-            child: ListView.builder(
-              itemCount: participants.length,
-              itemBuilder: (context, index){
-                return ListTile(
-                  title: Text(participants[index]['driver_name']),
-                  subtitle: Text('Co-driver: ${participants[index]['co_driver_name']}| Category: ${participants[index]['category']}'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => deleteParticipant(participants[index]['id']),
-                    ),
-                );
-              },
-              ),
-              ),
-        ],
-      ),
     );
   }
 }
