@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
+import 'track_screen.dart';
 
 
 class ParticipantScreen extends StatefulWidget{
@@ -11,7 +12,7 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   List<Map<String, dynamic>> participants = [];
 
   // controllers for user input
-  final TextEditingController _participantNumberController = TextEditingController();
+  // final TextEditingController _participantNumberController = TextEditingController();
   final TextEditingController _driverNameController = TextEditingController();
   final TextEditingController _coDriverNameController = TextEditingController();
   String _selectedCategory = 'Stock';
@@ -26,25 +27,26 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
 
   // Add a participant to the database
   void addParticipant() async{
-    if(_participantNumberController.text.isEmpty || 
-    _driverNameController.text.isEmpty||
-    _coDriverNameController.text.isEmpty){
+    if( _driverNameController.text.isEmpty|| _coDriverNameController.text.isEmpty){
       return;
     }
+
+    //Get the last participant number from the database
+    List<Map<String, dynamic>> allParticipants = await DatabaseHelper.instance.getAllParticipants();
+    int nextParticipantNumber = (allParticipants.isEmpty) ? 1 : allParticipants.length+1;
+
     await DatabaseHelper.instance.insertParticipant({
-      'participant_number': int.tryParse(_participantNumberController.text) ?? 0,
+      'participant_number': nextParticipantNumber,
       'driver_name': _driverNameController.text,
       'co_driver_name': _coDriverNameController.text,
       'category': _selectedCategory
     });
 
-    _participantNumberController.clear();
+    //Clear fields for next participant
     _driverNameController.clear();
     _coDriverNameController.clear();
 
-    fetchParticipants(); //Refresh list after inserting
-    Navigator.pop(context); //Close the dialog
-  
+    fetchParticipants(); //Refresh list after inserting  
   }
 
   // Delete a participant by ID
@@ -64,11 +66,6 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: _participantNumberController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Participant Number'),
-              ),
               TextField(
                 controller: _driverNameController,
                 decoration: InputDecoration(labelText: 'Driver Name'),
@@ -94,12 +91,20 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-            ),
+            onPressed: () => Navigator.pop(context),child: Text('Cancel')),
             ElevatedButton(
-              onPressed: addParticipant, 
-              child: Text('Add'),
+              onPressed: (){
+                addParticipant();
+                setState(() {});  //Refresh UI
+              }, 
+              child: Text('Add Another'),
+              ),
+              ElevatedButton(onPressed: (){
+                Navigator.pop(context);    //Close Dialog
+                Navigator.push(context,
+                MaterialPageRoute(builder: (context) => TrackScreen()),   //Navigate to next screen
+                );
+              }, child: Text('Submit'),
               ),
         ],
         );
