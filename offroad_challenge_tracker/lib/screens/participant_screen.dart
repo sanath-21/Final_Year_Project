@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
 import 'track_screen.dart';
-
+import '../widgets/participant_card.dart';
 
 class ParticipantScreen extends StatefulWidget{
   @override
@@ -42,11 +42,12 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
       'category': _selectedCategory
     });
 
+
+    fetchParticipants(); //Refresh list after inserting
+
     //Clear fields for next participant
     _driverNameController.clear();
-    _coDriverNameController.clear();
-
-    fetchParticipants(); //Refresh list after inserting  
+    _coDriverNameController.clear();  
   }
 
   // Delete a participant by ID
@@ -63,7 +64,8 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
         builder: (context, setStateDialog){
           return AlertDialog(
             title: Text('Add Participant'),
-          content: Column(
+          content: SingleChildScrollView(
+            child:   Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
@@ -89,16 +91,22 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
               ),
           ],
         ),
+      ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),child: Text('Cancel')),
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel')
+            ),
+            
             ElevatedButton(
               onPressed: (){
                 addParticipant();
-                setState(() {});  //Refresh UI
+                Navigator.pop(context); // Close Dialog before reopening
+                showAddParticipantDialog(); // Reopen fresh form
               }, 
               child: Text('Add Another'),
               ),
+
               ElevatedButton(onPressed: (){
                 Navigator.pop(context);    //Close Dialog
                 Navigator.push(context,
@@ -131,17 +139,9 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
       :ListView.builder(
         itemCount: participants.length,
         itemBuilder: (context, index){
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-            child: ListTile(
-              title: Text(participants[index]['driver_name']),
-              subtitle: Text(
-                'Co-driver: ${participants[index]['co_driver_name']} | Category: ${participants[index]['category']}'),
-                trailing: IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => deleteParticipant(participants[index]['id']),
-                  ),
-            ),      
+          return ParticipantCard(
+            participant: participants[index], 
+            onDelete: () => deleteParticipant(participants[index]['id']),
           );
         },
         ),
