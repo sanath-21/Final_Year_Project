@@ -20,6 +20,9 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   //Fetch all participants from the database
   void fetchParticipants() async{
     List<Map<String, dynamic>> data = await DatabaseHelper.instance.getAllParticipants();
+    
+    print("Fetchedd Participants: $data");
+    
     setState(() {
       participants = data;
     });
@@ -35,15 +38,21 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
     List<Map<String, dynamic>> allParticipants = await DatabaseHelper.instance.getAllParticipants();
     int nextParticipantNumber = (allParticipants.isEmpty) ? 1 : allParticipants.length+1;
 
-    await DatabaseHelper.instance.insertParticipant({
+    int insertedId = await DatabaseHelper.instance.insertParticipant({
       'participant_number': nextParticipantNumber,
       'driver_name': _driverNameController.text,
       'co_driver_name': _coDriverNameController.text,
       'category': _selectedCategory
     });
 
+  if(insertedId > 0){
+    print('Participant added successfully with ID: $insertedId');
+  } else {
+    print('Failed to add participant.');
+  }
 
     fetchParticipants(); //Refresh list after inserting
+    setState(() {});  //Ensure UI updates
 
     //Clear fields for next participant
     _driverNameController.clear();
@@ -102,7 +111,9 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
               onPressed: (){
                 addParticipant();
                 Navigator.pop(context); // Close Dialog before reopening
-                showAddParticipantDialog(); // Reopen fresh form
+                Future.delayed(Duration(milliseconds: 500), (){
+                  fetchParticipants(); //Fetch data after delay
+                });
               }, 
               child: Text('Add Another'),
               ),
@@ -124,7 +135,7 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   @override
   void initState(){
     super.initState();
-    fetchParticipants(); //Load data on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) => fetchParticipants()); //Load data on startup
   }  
 
   @override

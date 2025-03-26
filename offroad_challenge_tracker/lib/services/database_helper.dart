@@ -48,7 +48,7 @@ class DatabaseHelper {
       completion_time REAL NOT NULL,
       track_score INTEGER NOT NULL,
       penalty INTEGER DEFAULT 0,
-      FOREIGN KEY (paricipant_id) REFERENCES Participants (id) ON DELETE CASCADE,
+      FOREIGN KEY (participant_id) REFERENCES Participants (id) ON DELETE CASCADE,
       FOREIGN KEY (track_id) REFERENCES Tracks (id) ON DELETE CASCADE)''');
 
     await db.execute('''
@@ -113,5 +113,6 @@ Future<List<Map<String, dynamic>>> getRankings() async {
     final db = await instance.database;
     return await db.delete('Participants', where: 'id = ?', whereArgs: [id]);
   }
+
 
 }
