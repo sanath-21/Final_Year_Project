@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/database_helper.dart';
 import 'track_screen.dart';
 import '../widgets/participant_card.dart';
@@ -64,47 +65,51 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
     await DatabaseHelper.instance.deleteParticipant(id);
     fetchParticipants(); //Refresh the list
   }
+  @override
+  void initState() {
+    super.initState();
+    fetchParticipants();
+  }
 
   // Show Add Participant Form in Dialog
   void showAddParticipantDialog(){
     showDialog(
-      context: context, 
-      builder: (context) => StatefulBuilder(
-        builder: (context, setStateDialog){
-          return AlertDialog(
-            title: Text('Add Participant'),
-          content: SingleChildScrollView(
-            child:   Column(
+      context: context,
+      builder:(context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text('Add Participant', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _driverNameController,
                 decoration: InputDecoration(labelText: 'Driver Name'),
               ),
-
               TextField(
                 controller: _coDriverNameController,
                 decoration: InputDecoration(labelText: 'Co-Driver Name'),
               ),
-            
               DropdownButton<String>(
-                value: _selectedCategory, 
+                value: _selectedCategory,
                 onChanged: (newValue){
-                  setStateDialog(() {  //This setState does not rebuild the dialog
-                    _selectedCategory = newValue!;                
+                  setState(() {
+                    _selectedCategory = newValue!;
                   });
                 },
+
                 items: ['Stock', 'Mod Petrol', 'Mod Diesel', 'Pro', 'Ladies + Pro']
-                  .map((category) => DropdownMenuItem(value: category, child: Text(category)))
-                  .toList(),
+                .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                .toList(),
               ),
-          ],
+            ],
+          ),
         ),
-      ),
+
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel')
+            child: Text('Cancel', style: TextStyle(color: Colors.red)),
             ),
             
             ElevatedButton(
@@ -126,27 +131,27 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
               }, child: Text('Submit'),
               ),
         ],
+        ),
         );
-        },
-      ),
-      );
   }
 
-  @override
-  void initState(){
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => fetchParticipants()); //Load data on startup
-  }  
 
   @override
   Widget build(BuildContext context){
     return Scaffold(
-      appBar: AppBar(title: Text('Participants')),
-      floatingActionButton: FloatingActionButton(
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        title: Text('Participants', style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blueAccent
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: showAddParticipantDialog,
-        child: Icon(Icons.add),),
+        label: Text('Add Participant', style: TextStyle(color: Colors.white)),
+        icon: Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.blueAccent,
+        ),
       body: participants.isEmpty
-      ? Center(child: Text("No Participants Added"))
+      ? Center(child: Text("No Participants Added", style: GoogleFonts.poppins(fontSize: 16)))
       :ListView.builder(
         itemCount: participants.length,
         itemBuilder: (context, index){
