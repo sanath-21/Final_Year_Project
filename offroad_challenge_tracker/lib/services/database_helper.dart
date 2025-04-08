@@ -37,7 +37,6 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE Tracks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        track_name TEXT NOT NULL,
         track_number INTEGER UNIQUE NOT NULL)''');
 
     await db.execute('''
