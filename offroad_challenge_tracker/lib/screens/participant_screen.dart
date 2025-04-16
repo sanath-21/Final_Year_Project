@@ -13,7 +13,6 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   List<Map<String, dynamic>> participants = [];
 
   // controllers for user input
-  // final TextEditingController _participantNumberController = TextEditingController();
   final TextEditingController _driverNameController = TextEditingController();
   final TextEditingController _coDriverNameController = TextEditingController();
   String _selectedCategory = 'Stock';
@@ -22,7 +21,7 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
   void fetchParticipants() async{
     List<Map<String, dynamic>> data = await DatabaseHelper.instance.getAllParticipants();
     
-    print("Fetchedd Participants: $data");
+    print("Fetched Participants: $data");
     
     setState(() {
       participants = data;
@@ -31,7 +30,7 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
 
   // Add a participant to the database
   void addParticipant() async{
-    if( _driverNameController.text.isEmpty|| _coDriverNameController.text.isEmpty){
+    if( _driverNameController.text.isEmpty || _coDriverNameController.text.isEmpty){
       return;
     }
 
@@ -90,17 +89,21 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
                 controller: _coDriverNameController,
                 decoration: InputDecoration(labelText: 'Co-Driver Name'),
               ),
-              DropdownButton<String>(
-                value: _selectedCategory,
-                onChanged: (newValue){
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
+              StatefulBuilder(
+                builder: (context, setStateDialog){
+                  return DropdownButton<String>(
+                    value: _selectedCategory,
+                    onChanged: (newValue){
+                    setStateDialog(() {
+                      _selectedCategory = newValue!;
+                    });
                 },
 
                 items: ['Stock', 'Mod Petrol', 'Mod Diesel', 'Pro', 'Ladies + Pro']
-                .map((category) => DropdownMenuItem(value: category, child: Text(category)))
+                .map((category) => DropdownMenuItem(value: category, child: Text(category),))
                 .toList(),
+                );
+              },
               ),
             ],
           ),
@@ -120,15 +123,7 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
                   fetchParticipants(); //Fetch data after delay
                 });
               }, 
-              child: Text('Add Another'),
-              ),
-
-              ElevatedButton(onPressed: (){
-                Navigator.pop(context);    //Close Dialog
-                Navigator.push(context,
-                MaterialPageRoute(builder: (context) => TrackScreen()),   //Navigate to next screen
-                );
-              }, child: Text('Submit'),
+              child: Text('Add'),
               ),
         ],
         ),
@@ -150,17 +145,43 @@ class _ParticipantScreenState extends State<ParticipantScreen>{
         icon: Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.blueAccent,
         ),
-      body: participants.isEmpty
-      ? Center(child: Text("No Participants Added", style: GoogleFonts.poppins(fontSize: 16)))
-      :ListView.builder(
-        itemCount: participants.length,
-        itemBuilder: (context, index){
-          return ParticipantCard(
-            participant: participants[index], 
-            onDelete: () => deleteParticipant(participants[index]['id']),
-          );
-        },
-        ),
+      body: Stack(
+        children: [
+          participants.isEmpty
+              ? Center(
+                  child: Text("No Participants Added", style: GoogleFonts.poppins(fontSize: 16)),
+                )
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 70.0),
+                  child: ListView.builder(
+                    itemCount: participants.length,
+                    itemBuilder: (context, index) {
+                      return ParticipantCard(
+                        participant: participants[index],
+                        onDelete: () => deleteParticipant(participants[index]['id']),
+                      );
+                    },
+                  ),
+                ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => TrackScreen()));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Text('Submit', style: TextStyle(fontSize: 16, color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

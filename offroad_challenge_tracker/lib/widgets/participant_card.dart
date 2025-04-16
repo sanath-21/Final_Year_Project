@@ -46,7 +46,7 @@ Widget build(BuildContext context){
       style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
     ),
     subtitle: Text(
-      'Co-driver: ${participant['co_driver_name']} | Category ${participant['cateegory']}',
+      'Co-driver: ${participant['co_driver_name']} | Category ${participant['category']}',
       style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
     ),
     trailing: IconButton(

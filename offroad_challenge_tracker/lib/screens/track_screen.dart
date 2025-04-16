@@ -8,10 +8,9 @@ class TrackScreen extends StatefulWidget {
 }
 
 class _TrackScreenState extends State<TrackScreen> {
-  final TextEditingController _trackNameController = TextEditingController();
-  final TextEditingController _trackNumberController = TextEditingController();
-
   List<Map<String, dynamic>> tracks = [];
+  List<String> categories = ['All Category', 'Category 1', 'Category 2']; // Add your actual categories
+  String selectedCategory = 'All Category';
 
   @override
   void initState() {
@@ -21,26 +20,22 @@ class _TrackScreenState extends State<TrackScreen> {
 
   void fetchTracks() async {
     final db = await DatabaseHelper.instance.database;
-    final data = await db.query('Tracks');
+    final data = await db.query('Tracks', orderBy: 'track_number ASC');
     setState(() {
       tracks = data;
     });
   }
 
   Future<void> addTrack() async {
-    final name = _trackNameController.text;
-    final number = int.tryParse(_trackNumberController.text) ?? 0;
-
-    if (name.isEmpty || number == 0) return;
+    final nextTrackNumber = tracks.length + 1;
+    final name = 'Track $nextTrackNumber';
 
     final db = await DatabaseHelper.instance.database;
     await db.insert('Tracks', {
       'track_name': name,
-      'track_number': number,
+      'track_number': nextTrackNumber,
     });
 
-    _trackNameController.clear();
-    _trackNumberController.clear();
     fetchTracks();
   }
 
@@ -48,13 +43,17 @@ class _TrackScreenState extends State<TrackScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ParticipantScoreEntryScreen(trackId: trackId, trackName: trackName),
+        builder: (context) => ParticipantScoreEntryScreen(
+          trackId: trackId,
+          trackName: trackName,
+          category: selectedCategory,
+        ),
       ),
     );
   }
 
   void finishTracking() {
-    Navigator.pushNamed(context, '/rankings'); // Assuming RankingsScreen is routed as '/rankings'
+    Navigator.pushNamed(context, '/rankings');
   }
 
   @override
@@ -69,31 +68,26 @@ class _TrackScreenState extends State<TrackScreen> {
             padding: const EdgeInsets.all(12.0),
             child: Column(
               children: [
-                TextField(
-                  controller: _trackNameController,
-                  decoration: InputDecoration(labelText: 'Track Name'),
-                ),
-                TextField(
-                  controller: _trackNumberController,
-                  decoration: InputDecoration(labelText: 'Track Number'),
-                  keyboardType: TextInputType.number,
+                DropdownButton<String>(
+                  value: selectedCategory,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedCategory = value!;
+                    });
+                  },
+                  items: categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
                 ),
                 SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: addTrack,
-                      icon: Icon(Icons.add),
-                      label: Text('Add Track'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: finishTracking,
-                      icon: Icon(Icons.done),
-                      label: Text('Finish'),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    ),
-                  ],
+                ElevatedButton.icon(
+                  onPressed: finishTracking,
+                  icon: Icon(Icons.done),
+                  label: Text('Submit'),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 ),
               ],
             ),
@@ -107,13 +101,18 @@ class _TrackScreenState extends State<TrackScreen> {
                 return ListTile(
                   title: Text('${track['track_name']} (Track ${track['track_number']})'),
                   trailing: Icon(Icons.arrow_forward),
-                  onTap: () =>
-                      openParticipantScoreEntry(track['id'], track['track_name']),
+                  onTap: () => openParticipantScoreEntry(track['id'], track['track_name']),
                 );
               },
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addTrack,
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
+        tooltip: 'Add Track',
       ),
     );
   }
@@ -122,24 +121,21 @@ class _TrackScreenState extends State<TrackScreen> {
 class ParticipantScoreEntryScreen extends StatefulWidget {
   final int trackId;
   final String trackName;
+  final String category;
 
-  ParticipantScoreEntryScreen({required this.trackId, required this.trackName});
+  ParticipantScoreEntryScreen({
+    required this.trackId,
+    required this.trackName,
+    required this.category,
+  });
 
   @override
-  _ParticipantScoreEntryScreenState createState() => _ParticipantScoreEntryScreenState();
+  _ParticipantScoreEntryScreenState createState() =>
+      _ParticipantScoreEntryScreenState();
 }
 
 class _ParticipantScoreEntryScreenState extends State<ParticipantScoreEntryScreen> {
   List<Map<String, dynamic>> participants = [];
-
-  int parseTime(String timeStr) {
-  final parts = timeStr.split(':');
-  if (parts.length != 3) return 0;
-  final minutes = int.tryParse(parts[0]) ?? 0;
-  final seconds = int.tryParse(parts[1]) ?? 0;
-  final millis = int.tryParse(parts[2]) ?? 0;
-  return (minutes * 60000) + (seconds * 1000) + millis;
-}
   final Map<int, TextEditingController> timeControllers = {};
   final Map<int, TextEditingController> scoreControllers = {};
   final Map<int, TextEditingController> penaltyControllers = {};
@@ -151,20 +147,35 @@ class _ParticipantScoreEntryScreenState extends State<ParticipantScoreEntryScree
   }
 
   void fetchParticipants() async {
-    List<Map<String, dynamic>> data = await DatabaseHelper.instance.getAllParticipants();
+    List<Map<String, dynamic>> data;
+    if (widget.category == 'All Category') {
+      data = await DatabaseHelper.instance.getAllParticipants();
+    } else {
+      data = await DatabaseHelper.instance.getParticipantsByCategory(widget.category);
+    }
+
     setState(() {
       participants = data;
-      for (var participant in participants) {
-        timeControllers[participant['id']] = TextEditingController();
-        scoreControllers[participant['id']] = TextEditingController();
-        penaltyControllers[participant['id']] = TextEditingController();
+      for (var p in participants) {
+        timeControllers[p['id']] = TextEditingController();
+        scoreControllers[p['id']] = TextEditingController();
+        penaltyControllers[p['id']] = TextEditingController();
       }
     });
   }
 
+  int parseTime(String timeStr) {
+    final parts = timeStr.split(':');
+    if (parts.length != 3) return 0;
+    final minutes = int.tryParse(parts[0]) ?? 0;
+    final seconds = int.tryParse(parts[1]) ?? 0;
+    final millis = int.tryParse(parts[2]) ?? 0;
+    return (minutes * 60000) + (seconds * 1000) + millis;
+  }
+
   void submitScores() async {
-    for (var participant in participants) {
-      int id = participant['id'];
+    for (var p in participants) {
+      int id = p['id'];
       double time = parseTime(timeControllers[id]?.text ?? '00:00:000').toDouble();
       int score = int.tryParse(scoreControllers[id]?.text ?? '0') ?? 0;
       int penalty = int.tryParse(penaltyControllers[id]?.text ?? '0') ?? 0;

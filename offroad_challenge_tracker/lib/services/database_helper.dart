@@ -113,5 +113,20 @@ Future<List<Map<String, dynamic>>> getRankings() async {
     return await db.delete('Participants', where: 'id = ?', whereArgs: [id]);
   }
 
+  //Get Participants By Category
+  Future<List<Map<String, dynamic>>> getParticipantsByCategory(String category) async {
+  final db = await database;
+
+  if (category == 'All Category') {
+    return await db.query('Participants');
+  } else {
+    return await db.query(
+      'Participants',
+      where: 'category = ?',
+      whereArgs: [category],
+    );
+  }
+}
+
 
 }
