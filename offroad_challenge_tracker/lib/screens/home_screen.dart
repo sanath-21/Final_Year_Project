@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'participant_screen.dart';
-import 'rankings_screen.dart';
+import 'ranking_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       label: "View Rankings",
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => RankingsScreen()),
+                        MaterialPageRoute(builder: (context) => RankingScreen()),
                       ),
                     ),
                   ],

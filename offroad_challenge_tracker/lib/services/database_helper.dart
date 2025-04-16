@@ -21,6 +21,11 @@ class DatabaseHelper {
       path,
       version: 1,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE Tracks ADD COLUMN submitted INTEGER DEFAULT 0');
+    }
+    },
     );    
   }
 
@@ -36,8 +41,11 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE Tracks(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        track_number INTEGER UNIQUE NOT NULL)''');
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      track_number INTEGER UNIQUE NOT NULL,
+      track_name TEXT NOT NULL,
+      submitted INTEGER DEFAULT 0
+      )''');
 
     await db.execute('''
       CREATE TABLE Scores(
@@ -113,6 +121,40 @@ Future<List<Map<String, dynamic>>> getRankings() async {
     return await db.delete('Participants', where: 'id = ?', whereArgs: [id]);
   }
 
+    //Insert Tracks
+  Future<void> insertTrack(int trackNumber,String trackName) async {
+    final db = await database;
+    await db.insert(
+      'Tracks',
+      {
+        'track_number': trackNumber,
+        'track_name': trackName,
+        'submitted': 0, // Default value
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
+  //Function to mark track as submitted
+  Future<void> markTrackAsSubmitted(int trackId) async {
+    final db = await instance.database;
+    await db.update(
+      'Tracks',
+      {'submitted': 1},
+      where: 'id = ?',
+      whereArgs: [trackId],
+    );
+  }
+
+  //Get all Tracks
+  Future<List<Map<String, dynamic>>> getAllTracks() async {
+    final db = await database;
+    return await db.query('tracks', orderBy: 'id ASC');
+  }
+
+
+
   //Get Participants By Category
   Future<List<Map<String, dynamic>>> getParticipantsByCategory(String category) async {
   final db = await database;
@@ -126,6 +168,11 @@ Future<List<Map<String, dynamic>>> getRankings() async {
       whereArgs: [category],
     );
   }
+}
+
+Future close() async {
+  final db = await instance.database;
+  db.close();
 }
 
 
