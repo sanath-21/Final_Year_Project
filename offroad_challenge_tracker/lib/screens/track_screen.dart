@@ -8,14 +8,45 @@ class TrackScreen extends StatefulWidget {
   _TrackScreenState createState() => _TrackScreenState();
 }
 
-class _TrackScreenState extends State<TrackScreen> {
+class _TrackScreenState extends State<TrackScreen>
+    with SingleTickerProviderStateMixin {
   List<Map<String, dynamic>> tracks = [];
   int nextTrackNumber = 1;
+
+  late AnimationController _animationController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadTracks();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 500),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTracks() async {
@@ -42,8 +73,10 @@ class _TrackScreenState extends State<TrackScreen> {
       }
 
       String name = 'Track $nextTrackNumber';
-      await DatabaseHelper.instance.insertTrack(nextTrackNumber, name); // ✅ Fix here
+      await DatabaseHelper.instance.insertTrack(nextTrackNumber, name);
       await _loadTracks();
+      _animationController.forward(from: 0); // Restart animation
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Track $name added successfully!")),
       );
@@ -51,7 +84,6 @@ class _TrackScreenState extends State<TrackScreen> {
       print("Error adding track: $e");
     }
   }
-
 
   void _navigateToScoreEntry(Map<String, dynamic> track) async {
     await Navigator.push(
@@ -63,7 +95,7 @@ class _TrackScreenState extends State<TrackScreen> {
         ),
       ),
     );
-    await _loadTracks(); // Refresh after score entry
+    await _loadTracks();
   }
 
   void _submitAndGoToRankings() {
@@ -73,6 +105,18 @@ class _TrackScreenState extends State<TrackScreen> {
         builder: (context) => RankingScreen(),
       ),
     );
+  }
+
+  Future<void> _deleteTrack(int trackId) async {
+    try {
+      await DatabaseHelper.instance.deleteTrack(trackId);
+      await _loadTracks();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Track deleted successfully!")),
+      );
+    } catch (e) {
+      print("Error deleting track: $e");
+    }
   }
 
   @override
@@ -110,18 +154,61 @@ class _TrackScreenState extends State<TrackScreen> {
                       final track = tracks[index];
                       final isSubmitted = track['submitted'] == 1;
 
-                      return Card(
-                        margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        child: ListTile(
-                          title: Text(
-                            track['track_name'],
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                      return FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: Card(
+                            margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            child: ListTile(
+                              title: Text(
+                                track['track_name'],
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isSubmitted ? Icons.check_circle : Icons.pending,
+                                    color: isSubmitted ? Colors.green : Colors.orange,
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      bool deleteTrack = await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('Delete Track'),
+                                            content: Text(
+                                                'Are you sure you want to delete this track?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop(false);
+                                                },
+                                                child: Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.of(context).pop(true);
+                                                },
+                                                child: Text('Delete'),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      if (deleteTrack) {
+                                        _deleteTrack(track['id']);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                              onTap: () => _navigateToScoreEntry(track),
+                            ),
                           ),
-                          trailing: Icon(
-                            isSubmitted ? Icons.check_circle : Icons.pending,
-                            color: isSubmitted ? Colors.green : Colors.orange,
-                          ),
-                          onTap: () => _navigateToScoreEntry(track),
                         ),
                       );
                     },

@@ -49,14 +49,17 @@ class DatabaseHelper {
 
     await db.execute('''
       CREATE TABLE Scores(
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      participant_id INTEGER NOT NULL,
-      track_id INTEGER NOT NULL,
-      completion_time REAL NOT NULL,
-      track_score INTEGER NOT NULL,
-      penalty INTEGER DEFAULT 0,
-      FOREIGN KEY (participant_id) REFERENCES Participants (id) ON DELETE CASCADE,
-      FOREIGN KEY (track_id) REFERENCES Tracks (id) ON DELETE CASCADE)''');
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        participant_id INTEGER NOT NULL,
+        track_id INTEGER NOT NULL,
+        completion_time REAL NOT NULL,
+        track_score INTEGER NOT NULL,
+        penalty INTEGER DEFAULT 0,
+        FOREIGN KEY (participant_id) REFERENCES Participants(id),
+        FOREIGN KEY (track_id) REFERENCES Tracks(id),
+        UNIQUE (participant_id, track_id)
+      )''');
+
 
     await db.execute('''
       CREATE TABLE Rankings(
@@ -75,16 +78,22 @@ class DatabaseHelper {
   } 
 
 // Insert Score Data
-Future<int> insertScore(int participantId, int trackId, double completionTime, int trackScore, int penalty) async {
+Future<void> insertScore(
+    int participantId, int trackId, double time, int score, int penalty) async {
   final db = await instance.database;
-  return await db.insert('Scores', {
-    'participant_id': participantId,
-    'track_id': trackId,
-    'completion_time': completionTime,
-    'track_score': trackScore,
-    'penalty': penalty,
-  });
+  await db.insert(
+    'Scores',
+    {
+      'participant_id': participantId,
+      'track_id': trackId,
+      'completion_time': time,
+      'track_score': score,
+      'penalty': penalty,
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
 }
+
 
 // Get Total Scores
 Future<List<Map<String, dynamic>>> getTotalScores() async {
@@ -135,6 +144,16 @@ Future<List<Map<String, dynamic>>> getRankings() async {
     );
   }
 
+    // Method to delete a track by its ID
+    Future<int> deleteTrack(int trackId) async {
+      final db = await instance.database;
+
+      return await db.delete(
+        'tracks', // Table name
+        where: 'id = ?', // Column to match
+        whereArgs: [trackId], // Argument for where clause
+      );
+    }
 
   //Function to mark track as submitted
   Future<void> markTrackAsSubmitted(int trackId) async {
